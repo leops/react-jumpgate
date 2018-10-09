@@ -20,3 +20,20 @@ exports[`basic 1`] = `
   />
 </div>
 `;
+
+exports[`basic 2`] = `
+<div
+  className="root"
+>
+  <div
+    className="consumer"
+  >
+    <div
+      className="jump-update"
+    />
+  </div>
+  <div
+    className="provider"
+  />
+</div>
+`;

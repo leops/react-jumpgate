@@ -70,6 +70,10 @@ export default function createJumpgate(): Jumpgate {
             this.props.render(this.props.children);
         }
 
+        componentDidUpdate() {
+            this.props.render(this.props.children);
+        }
+
         componentWillUnmount() {
             this.props.render(null);
         }

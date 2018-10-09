@@ -6,24 +6,39 @@ import createJumpgate from '../src';
 test('basic', () => {
     const { Anchor, Provider, Consumer } = createJumpgate();
 
-    const render = renderer
-        .create(
-            <div className="root">
-                <Anchor>
-                    <div className="consumer">
-                        <Consumer />
-                    </div>
-                    <div className="provider">
-                        <Provider>
-                            <div className="jump" />
-                        </Provider>
-                    </div>
-                </Anchor>
-            </div>
-        )
-        .toJSON();
+    const tree = renderer.create(
+        <div className="root">
+            <Anchor>
+                <div className="consumer">
+                    <Consumer />
+                </div>
+                <div className="provider">
+                    <Provider>
+                        <div className="jump" />
+                    </Provider>
+                </div>
+            </Anchor>
+        </div>
+    );
 
-    expect(render).toMatchSnapshot();
+    expect(tree.toJSON()).toMatchSnapshot();
+
+    tree.update(
+        <div className="root">
+            <Anchor>
+                <div className="consumer">
+                    <Consumer />
+                </div>
+                <div className="provider">
+                    <Provider>
+                        <div className="jump-update" />
+                    </Provider>
+                </div>
+            </Anchor>
+        </div>
+    );
+
+    expect(tree.toJSON()).toMatchSnapshot();
 });
 
 test('anchor-less <Provider />', () => {
