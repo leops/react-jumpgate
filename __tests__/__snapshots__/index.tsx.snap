@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`anchor-less <Consumer /> 1`] = `"Attempted to render a <Consumer /> without an <Anchor />"`;
+
+exports[`anchor-less <Provider /> 1`] = `"Attempted to render a <Provider /> without an <Anchor />"`;
+
+exports[`basic 1`] = `
+<div
+  className="root"
+>
+  <div
+    className="consumer"
+  >
+    <div
+      className="jump"
+    />
+  </div>
+  <div
+    className="provider"
+  />
+</div>
+`;
