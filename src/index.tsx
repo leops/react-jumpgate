@@ -1,4 +1,4 @@
-import React, { PureComponent, ReactNode, ComponentType } from 'react';
+import React, { PureComponent, ReactNode, ComponentType, StatelessComponent } from 'react';
 
 enum Lifecycle {
     Mount = 0,
@@ -8,12 +8,12 @@ enum Lifecycle {
 
 type Render = (node: ReactNode, isMount: Lifecycle) => void;
 
-const through = (node: ReactNode) => {
+const through = (fallback: ReactNode) => (node: ReactNode) => {
     if (node instanceof Error) {
         throw node;
     }
 
-    return node;
+    return node || fallback;
 };
 
 const consumerError = new Error(
@@ -89,7 +89,7 @@ export default function createJumpgate(): Jumpgate {
         }
     }
 
-    const Consumer = () => <NodeConsumer>{through}</NodeConsumer>;
+    const Consumer: StatelessComponent = ({ children }) => <NodeConsumer>{through(children)}</NodeConsumer>;
 
     class ProviderImpl extends PureComponent<ImplProps> {
         componentDidMount() {

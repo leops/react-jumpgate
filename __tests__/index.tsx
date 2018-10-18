@@ -57,6 +57,62 @@ test('lifecycle', () => {
     expect(tree.toJSON()).toMatchSnapshot();
 });
 
+test('fallback', () => {
+    const { Anchor, Provider, Consumer } = createJumpgate();
+
+    // default
+    const tree = renderer.create(
+        <div className="root">
+            <Anchor>
+                <div className="consumer">
+                    <Consumer>
+                        <div className="default" />
+                    </Consumer>
+                </div>
+                <div className="provider" />
+            </Anchor>
+        </div>
+    );
+
+    expect(tree.toJSON()).toMatchSnapshot();
+
+    // telefrag
+    tree.update(
+        <div className="root">
+            <Anchor>
+                <div className="consumer">
+                    <Consumer>
+                        <div className="default" />
+                    </Consumer>
+                </div>
+                <div className="provider">
+                    <Provider>
+                        <div className="jump" />
+                    </Provider>
+                </div>
+            </Anchor>
+        </div>
+    );
+
+    expect(tree.toJSON()).toMatchSnapshot();
+
+    // restore
+    tree.update(
+        <div className="root">
+            <Anchor>
+                <div className="consumer">
+                    <Consumer>
+                        <div className="default" />
+                    </Consumer>
+                </div>
+                <div className="provider" />
+            </Anchor>
+        </div>
+    );
+
+    expect(tree.toJSON()).toMatchSnapshot();
+});
+
 test('anchor-less <Provider />', () => {
     const { Provider } = createJumpgate();
 

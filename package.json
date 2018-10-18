@@ -1,6 +1,6 @@
 {
     "name": "react-jumpgate",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "description": "Renderer-Agnostic portals for React",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",

@@ -4,6 +4,57 @@ exports[`anchor-less <Consumer /> 1`] = `"Attempted to render a <Consumer /> wit
 
 exports[`anchor-less <Provider /> 1`] = `"Attempted to render a <Provider /> without an <Anchor />"`;
 
+exports[`fallback 1`] = `
+<div
+  className="root"
+>
+  <div
+    className="consumer"
+  >
+    <div
+      className="default"
+    />
+  </div>
+  <div
+    className="provider"
+  />
+</div>
+`;
+
+exports[`fallback 2`] = `
+<div
+  className="root"
+>
+  <div
+    className="consumer"
+  >
+    <div
+      className="jump"
+    />
+  </div>
+  <div
+    className="provider"
+  />
+</div>
+`;
+
+exports[`fallback 3`] = `
+<div
+  className="root"
+>
+  <div
+    className="consumer"
+  >
+    <div
+      className="default"
+    />
+  </div>
+  <div
+    className="provider"
+  />
+</div>
+`;
+
 exports[`lifecycle 1`] = `
 <div
   className="root"
