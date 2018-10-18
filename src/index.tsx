@@ -1,6 +1,12 @@
 import React, { PureComponent, ReactNode, ComponentType } from 'react';
 
-type Render = (node: ReactNode) => void;
+enum Lifecycle {
+    Mount = 0,
+    Update = 1,
+    Unmount = 2
+}
+
+type Render = (node: ReactNode, isMount: Lifecycle) => void;
 
 const through = (node: ReactNode) => {
     if (node instanceof Error) {
@@ -17,6 +23,19 @@ const consumerError = new Error(
 const providerError = (node: ReactNode) => {
     throw new Error('Attempted to render a <Provider /> without an <Anchor />');
 };
+
+const helpMessage = ' Jumpgate. Did you render multiple <Provider /> ?';
+const mountError = 'Tried to use an already-full' + helpMessage;
+const updateError = 'Tried to update an empty' + helpMessage;
+const unmountError = 'Tried to clear an empty' + helpMessage;
+
+interface AnchorState {
+    node: ReactNode;
+}
+
+interface ImplProps {
+    render: Render;
+}
 
 export interface ProviderProps {
     children: ReactNode;
@@ -38,14 +57,25 @@ export default function createJumpgate(): Jumpgate {
         Consumer: NodeConsumer
     } = React.createContext<ReactNode>(consumerError);
 
-    class Anchor extends PureComponent {
+    class Anchor extends PureComponent<{}, AnchorState> {
         state = {
             node: null
         };
 
-        setNode = (node: ReactNode) => {
-            this.setState({ node });
-            return null;
+        setNode = (node: ReactNode, lifecycle: Lifecycle) => {
+            this.setState(state => {
+                if (lifecycle === Lifecycle.Mount && state.node !== null) {
+                    console.warn(mountError);
+                }
+                if (lifecycle === Lifecycle.Update && state.node === null) {
+                    console.warn(updateError);
+                }
+                if (lifecycle === Lifecycle.Unmount && state.node === null) {
+                    console.warn(unmountError);
+                }
+
+                return { node };
+            });
         };
 
         render() {
@@ -61,21 +91,17 @@ export default function createJumpgate(): Jumpgate {
 
     const Consumer = () => <NodeConsumer>{through}</NodeConsumer>;
 
-    interface ImplProps {
-        render: Render;
-    }
-
     class ProviderImpl extends PureComponent<ImplProps> {
         componentDidMount() {
-            this.props.render(this.props.children);
+            this.props.render(this.props.children, Lifecycle.Mount);
         }
 
         componentDidUpdate() {
-            this.props.render(this.props.children);
+            this.props.render(this.props.children, Lifecycle.Update);
         }
 
         componentWillUnmount() {
-            this.props.render(null);
+            this.props.render(null, Lifecycle.Unmount);
         }
 
         render() {

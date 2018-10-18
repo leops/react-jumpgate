@@ -4,7 +4,7 @@ exports[`anchor-less <Consumer /> 1`] = `"Attempted to render a <Consumer /> wit
 
 exports[`anchor-less <Provider /> 1`] = `"Attempted to render a <Provider /> without an <Anchor />"`;
 
-exports[`basic 1`] = `
+exports[`lifecycle 1`] = `
 <div
   className="root"
 >
@@ -21,7 +21,7 @@ exports[`basic 1`] = `
 </div>
 `;
 
-exports[`basic 2`] = `
+exports[`lifecycle 2`] = `
 <div
   className="root"
 >
@@ -37,3 +37,20 @@ exports[`basic 2`] = `
   />
 </div>
 `;
+
+exports[`lifecycle 3`] = `
+<div
+  className="root"
+>
+  <div
+    className="consumer"
+  />
+  <div
+    className="provider"
+  />
+</div>
+`;
+
+exports[`multiple <Provider /> 1`] = `"Tried to use an already-full Jumpgate. Did you render multiple <Provider /> ?"`;
+
+exports[`multiple <Provider /> 2`] = `"Tried to update an empty Jumpgate. Did you render multiple <Provider /> ?"`;
