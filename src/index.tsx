@@ -1,14 +1,39 @@
-import React, { PureComponent, ReactNode, ComponentType, StatelessComponent } from 'react';
+import React, {
+    PureComponent,
+    ReactNode,
+    ComponentType,
+    Context,
+    ReactElement,
+    version,
+
+    // @ts-ignore
+    useState,
+    // @ts-ignore
+    useCallback,
+    // @ts-ignore
+    useContext,
+    // @ts-ignore
+    useRef,
+    // @ts-ignore
+    useMemo,
+    // @ts-ignore
+    useEffect,
+} from 'react';
+
+const versionParts = version.split('.') as [string, string, string];
+const hasStaticContext =
+    Number(versionParts[0]) >= 16 && Number(versionParts[1]) >= 6;
+const hasHooks = Number(versionParts[0]) >= 16 && Number(versionParts[1]) >= 7;
 
 enum Lifecycle {
     Mount = 0,
     Update = 1,
-    Unmount = 2
+    Unmount = 2,
 }
 
 type Render = (node: ReactNode, isMount: Lifecycle) => void;
 
-const through = (fallback: ReactNode) => (node: ReactNode) => {
+const through = (fallback: ReactNode) => (node: ReactNode): ReactNode => {
     if (node instanceof Error) {
         throw node;
     }
@@ -17,7 +42,7 @@ const through = (fallback: ReactNode) => (node: ReactNode) => {
 };
 
 const consumerError = new Error(
-    'Attempted to render a <Consumer /> without an <Anchor />'
+    'Attempted to render a <Consumer /> without an <Anchor />',
 );
 
 const providerError = (node: ReactNode) => {
@@ -33,7 +58,7 @@ interface AnchorState {
     node: ReactNode;
 }
 
-interface ImplProps {
+interface ImplProps extends ProviderProps {
     render: Render;
 }
 
@@ -47,73 +72,178 @@ export interface Jumpgate {
     Provider: ComponentType<ProviderProps>;
 }
 
-export default function createJumpgate(): Jumpgate {
-    const {
-        Provider: RenderProvider,
-        Consumer: RenderConsumer
-    } = React.createContext<Render>(providerError);
-    const {
-        Provider: NodeProvider,
-        Consumer: NodeConsumer
-    } = React.createContext<ReactNode>(consumerError);
+let createAnchor: (
+    NodeContext: Context<ReactNode>,
+    RenderContext: Context<Render>,
+) => ComponentType<{}>;
+let createConsumer: (NodeContext: Context<ReactNode>) => ComponentType<{}>;
+let createProvider: (
+    RenderContext: Context<Render>,
+) => ComponentType<ProviderProps>;
 
-    class Anchor extends PureComponent<{}, AnchorState> {
-        state = {
-            node: null
-        };
+if (hasHooks) {
+    createAnchor = ({ Provider: NodeProvider }, { Provider: RenderProvider }) =>
+        function Anchor({ children }) {
+            const [node, setState] = useState(null);
 
-        setNode = (node: ReactNode, lifecycle: Lifecycle) => {
-            this.setState(state => {
-                if (lifecycle === Lifecycle.Mount && state.node !== null) {
-                    console.warn(mountError);
-                }
-                if (lifecycle === Lifecycle.Update && state.node === null) {
-                    console.warn(updateError);
-                }
-                if (lifecycle === Lifecycle.Unmount && state.node === null) {
-                    console.warn(unmountError);
-                }
+            const setNode = useCallback(
+                (node: ReactNode, lifecycle: Lifecycle) => {
+                    setState((state: ReactNode) => {
+                        if (lifecycle === Lifecycle.Mount && state !== null) {
+                            console.warn(mountError);
+                        }
+                        if (lifecycle === Lifecycle.Update && state === null) {
+                            console.warn(updateError);
+                        }
+                        if (lifecycle === Lifecycle.Unmount && state === null) {
+                            console.warn(unmountError);
+                        }
 
-                return { node };
-            });
-        };
+                        return node;
+                    });
+                },
+                [setState],
+            );
 
-        render() {
             return (
-                <RenderProvider value={this.setNode}>
-                    <NodeProvider value={this.state.node}>
-                        {this.props.children}
-                    </NodeProvider>
+                <RenderProvider value={setNode}>
+                    <NodeProvider value={node}>{children}</NodeProvider>
                 </RenderProvider>
             );
-        }
-    }
+        };
 
-    const Consumer: StatelessComponent = ({ children }) => <NodeConsumer>{through(children)}</NodeConsumer>;
+    createConsumer = Context =>
+        function Consumer({ children }) {
+            const node = useContext(Context);
+            return (through(children)(node) as ReactElement<any>) || null;
+        };
 
-    class ProviderImpl extends PureComponent<ImplProps> {
-        componentDidMount() {
-            this.props.render(this.props.children, Lifecycle.Mount);
-        }
+    createProvider = Context =>
+        function Provider({ children }: ProviderProps) {
+            const render = useContext(Context);
 
-        componentDidUpdate() {
-            this.props.render(this.props.children, Lifecycle.Update);
-        }
+            const isMounted = useRef(false);
+            useMemo(
+                () => {
+                    render(
+                        children,
+                        isMounted.current ? Lifecycle.Update : Lifecycle.Mount,
+                    );
+                    isMounted.current = true;
+                },
+                [children, render],
+            );
 
-        componentWillUnmount() {
-            this.props.render(null, Lifecycle.Unmount);
-        }
+            useEffect(
+                () => () => {
+                    render(null, Lifecycle.Unmount);
+                    isMounted.current = false;
+                },
+                [],
+            );
 
-        render() {
             return null;
-        }
-    }
+        };
+} else {
+    createAnchor = ({ Provider: NodeProvider }, { Provider: RenderProvider }) =>
+        class Anchor extends PureComponent<{}, AnchorState> {
+            state = {
+                node: null,
+            };
 
-    const Provider = ({ children }: ProviderProps) => (
-        <RenderConsumer>
-            {render => <ProviderImpl render={render} children={children} />}
-        </RenderConsumer>
+            setNode = (node: ReactNode, lifecycle: Lifecycle) => {
+                this.setState(state => {
+                    if (lifecycle === Lifecycle.Mount && state.node !== null) {
+                        console.warn(mountError);
+                    }
+                    if (lifecycle === Lifecycle.Update && state.node === null) {
+                        console.warn(updateError);
+                    }
+                    if (
+                        lifecycle === Lifecycle.Unmount &&
+                        state.node === null
+                    ) {
+                        console.warn(unmountError);
+                    }
+
+                    return { node };
+                });
+            };
+
+            render() {
+                return (
+                    <RenderProvider value={this.setNode}>
+                        <NodeProvider value={this.state.node}>
+                            {this.props.children}
+                        </NodeProvider>
+                    </RenderProvider>
+                );
+            }
+        };
+
+    createConsumer = ({ Consumer }) => ({ children }) => (
+        <Consumer>{through(children)}</Consumer>
     );
 
-    return { Anchor, Consumer, Provider };
+    if (hasStaticContext) {
+        createProvider = RenderContext =>
+            class Provider extends PureComponent<ProviderProps> {
+                static contextType = RenderContext;
+
+                componentDidMount() {
+                    this.context(this.props.children, Lifecycle.Mount);
+                }
+
+                componentDidUpdate() {
+                    this.context(this.props.children, Lifecycle.Update);
+                }
+
+                componentWillUnmount() {
+                    this.context(null, Lifecycle.Unmount);
+                }
+
+                render() {
+                    return null;
+                }
+            };
+    } else {
+        createProvider = ({ Consumer }) => {
+            class ProviderImpl extends PureComponent<ImplProps> {
+                componentDidMount() {
+                    this.props.render(this.props.children, Lifecycle.Mount);
+                }
+
+                componentDidUpdate() {
+                    this.props.render(this.props.children, Lifecycle.Update);
+                }
+
+                componentWillUnmount() {
+                    this.props.render(null, Lifecycle.Unmount);
+                }
+
+                render() {
+                    return null;
+                }
+            }
+
+            return ({ children }: ProviderProps) => (
+                <Consumer>
+                    {render => (
+                        <ProviderImpl render={render} children={children} />
+                    )}
+                </Consumer>
+            );
+        };
+    }
+}
+
+export default function createJumpgate(): Jumpgate {
+    const RenderContext = React.createContext<Render>(providerError);
+    const NodeContext = React.createContext<ReactNode>(consumerError);
+
+    return {
+        Anchor: createAnchor(NodeContext, RenderContext),
+        Consumer: createConsumer(NodeContext),
+        Provider: createProvider(RenderContext),
+    };
 }

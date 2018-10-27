@@ -1,12 +1,13 @@
 {
     "name": "react-jumpgate",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Renderer-Agnostic portals for React",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
+        "prepublish": "yarn run build && yarn test",
         "build": "tsc",
-        "test": "jest"
+        "test": "jest --coverage"
     },
     "repository": "http://github.com/leops/react-jumpgate",
     "author": "Léo-Paul Couturier <npm@leops.me>",
@@ -14,15 +15,16 @@
     "private": false,
     "devDependencies": {
         "@types/jest": "^23.3.5",
-        "@types/react": "^16.4.16",
+        "@types/react": "^16.4.18",
         "@types/react-test-renderer": "^16.0.3",
         "jest": "^23.6.0",
-        "react": "^16.5.2",
-        "react-test-renderer": "^16.5.2",
+        "prettier": "^1.14.3",
+        "react": "16.7.0-alpha.0",
+        "react-test-renderer": "16.7.0-alpha.0",
         "ts-jest": "^23.10.4",
         "typescript": "^3.1.1"
     },
     "peerDependencies": {
-        "react": "^16.5.2"
+        "react": "^16.3.0"
     }
 }
