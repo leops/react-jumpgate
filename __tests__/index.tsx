@@ -1,30 +1,39 @@
-import { TestRendererOptions, ReactTestRenderer } from 'react-test-renderer';
-import { Jumpgate } from '../src';
-import { ReactElement } from 'react';
+import * as Renderer from 'react-test-renderer';
+import * as ReactType from 'react';
+import Jumpgate from '../src';
 
-interface Renderer {
-    create(
-        nextElement: ReactElement<any>,
-        options?: TestRendererOptions,
-    ): ReactTestRenderer;
-}
-
-for (const reactVersion of ['16.3.0', '16.6.0', '16.7.0-alpha.0']) {
+for (const reactVersion of ['16.3.0', '16.6.0', '16.9.0']) {
     describe(`works with React ${reactVersion}`, () => {
-        let React;
-        let renderer: Renderer;
-        let createJumpgate: () => Jumpgate;
+        let React: typeof ReactType;
+        let renderer: typeof Renderer;
+        let createJumpgate: typeof Jumpgate;
 
         {
             jest.resetModules();
-            // @ts-ignore
-            React = require('react');
-            // @ts-ignore
-            Object.assign(React, { version: reactVersion });
+
+            const suffix = reactVersion.substr(0, 4).replace('.', '-');
+
+            try {
+                // @ts-ignore
+                React = require(`react-${suffix}/node_modules/react`);
+            } catch (_) {
+                // @ts-ignore
+                React = require('react');
+            }
+
+            expect(React.version).toBe(reactVersion);
+            jest.setMock('react', React);
+
             // @ts-ignore
             createJumpgate = require('../src').default;
-            // @ts-ignore
-            renderer = require('react-test-renderer');
+
+            try {
+                // @ts-ignore
+                renderer = require(`react-${suffix}/node_modules/react-test-renderer`);
+            } catch (_) {
+                // @ts-ignore
+                renderer = require('react-test-renderer');
+            }
         }
 
         test('lifecycle', () => {

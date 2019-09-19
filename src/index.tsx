@@ -5,18 +5,11 @@ import React, {
     Context,
     ReactElement,
     version,
-
-    // @ts-ignore
     useState,
-    // @ts-ignore
     useCallback,
-    // @ts-ignore
     useContext,
-    // @ts-ignore
     useRef,
-    // @ts-ignore
     useMemo,
-    // @ts-ignore
     useEffect,
 } from 'react';
 
@@ -33,12 +26,14 @@ enum Lifecycle {
 
 type Render = (node: ReactNode, isMount: Lifecycle) => void;
 
-const through = (fallback: ReactNode) => (node: ReactNode): ReactNode => {
+const through = (fallback: ReactNode) => (
+    node: ReactNode,
+): ReactElement<any> | null => {
     if (node instanceof Error) {
         throw node;
     }
 
-    return node || fallback;
+    return ((node || fallback) as ReactElement<any>) || null;
 };
 
 const consumerError = new Error(
@@ -84,7 +79,7 @@ let createProvider: (
 if (hasHooks) {
     createAnchor = ({ Provider: NodeProvider }, { Provider: RenderProvider }) =>
         function Anchor({ children }) {
-            const [node, setState] = useState(null);
+            const [node, setState] = useState<ReactNode>(null);
 
             const setNode = useCallback(
                 (node: ReactNode, lifecycle: Lifecycle) => {
@@ -115,7 +110,7 @@ if (hasHooks) {
     createConsumer = Context =>
         function Consumer({ children }) {
             const node = useContext(Context);
-            return (through(children)(node) as ReactElement<any>) || null;
+            return through(children)(node);
         };
 
     createProvider = Context =>

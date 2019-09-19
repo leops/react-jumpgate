@@ -1,0 +1,8 @@
+{
+    "name": "react-16-9",
+    "version": "16.9.0",
+    "dependencies": {
+        "react": "16.9.0",
+        "react-test-renderer": "16.9.0"
+    }
+}
